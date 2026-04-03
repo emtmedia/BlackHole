@@ -1,10 +1,10 @@
 const CACHE_NAME = 'blackhole-v1';
 const ASSETS = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
+  '/BlackHole/',
+  '/BlackHole/index.html',
+  '/BlackHole/manifest.json',
+  '/BlackHole/icon-192.png',
+  '/BlackHole/icon-512.png',
 ];
 
 // Install — cache app shell

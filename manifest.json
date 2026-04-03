@@ -2,7 +2,7 @@
   "name": "BlackHole Video Downloader",
   "short_name": "BlackHole",
   "description": "Download videos from YouTube, Instagram, Twitter, TikTok and more",
-  "start_url": "/",
+  "start_url": "/BlackHole/",
   "display": "standalone",
   "background_color": "#050508",
   "theme_color": "#000000",
