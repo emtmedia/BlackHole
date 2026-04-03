@@ -298,9 +298,17 @@
         setStatus(m,'error');addHistory(url,'fail');
       }finally{$('holeBtn').classList.remove('sucking')}}
 
-    function triggerDownload(url,fn){
-      const w=window.open(url,'_blank');
-      if(!w){const a=document.createElement('a');a.href=url;a.download=fn;a.target='_blank';
+    async function triggerDownload(url,fn){
+      try{
+        const resp=await fetch(url);
+        if(!resp.ok)throw new Error('fetch failed');
+        const blob=await resp.blob();
+        const blobUrl=URL.createObjectURL(blob);
+        const a=document.createElement('a');a.href=blobUrl;a.download=fn||'download';
+        document.body.appendChild(a);a.click();document.body.removeChild(a);
+        setTimeout(()=>URL.revokeObjectURL(blobUrl),30000);
+      }catch(e){
+        const a=document.createElement('a');a.href=url;a.download=fn||'download';a.target='_blank';
         document.body.appendChild(a);a.click();document.body.removeChild(a)}}
 
     function showPicker(items,audioUrl){
