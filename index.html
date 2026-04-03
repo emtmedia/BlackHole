@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BlackHole">
+  <meta name="theme-color" content="#000000">
+  <title>BlackHole</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Chakra+Petch:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+    :root{
+      --bg:#050508;--surface:#0a0a12;--accent:#6c3ce0;--accent-glow:#8b5cf6;
+      --accent-dim:#3b1f8e;--text:#e8e4f0;--text-dim:#7a7490;
+      --success:#22c55e;--error:#ef4444;
+      --ring1:rgba(108,60,224,0.15);--ring2:rgba(108,60,224,0.08);--ring3:rgba(108,60,224,0.04);
+    }
+    html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--text);
+      font-family:'Chakra Petch',sans-serif;-webkit-tap-highlight-color:transparent;
+      -webkit-user-select:none;user-select:none}
+
+    .starfield{position:fixed;inset:0;
+      background:
+        radial-gradient(1px 1px at 10% 20%,rgba(255,255,255,.5),transparent),
+        radial-gradient(1px 1px at 30% 60%,rgba(255,255,255,.3),transparent),
+        radial-gradient(1px 1px at 50% 10%,rgba(255,255,255,.4),transparent),
+        radial-gradient(1px 1px at 70% 80%,rgba(255,255,255,.3),transparent),
+        radial-gradient(1px 1px at 90% 40%,rgba(255,255,255,.5),transparent),
+        radial-gradient(1.5px 1.5px at 25% 35%,rgba(168,130,255,.4),transparent),
+        radial-gradient(1.5px 1.5px at 65% 70%,rgba(168,130,255,.3),transparent);z-index:0}
+
+    .app{position:relative;z-index:1;height:100%;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;padding:2rem 1.5rem}
+
+    .title{font-family:'Orbitron',sans-serif;font-size:1.6rem;font-weight:900;
+      letter-spacing:.15em;text-transform:uppercase;
+      background:linear-gradient(135deg,#c4b5fd,#8b5cf6,#6c3ce0);
+      -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+      margin-bottom:.4rem}
+    .subtitle{font-size:.75rem;color:var(--text-dim);letter-spacing:.25em;
+      text-transform:uppercase;margin-bottom:1.8rem}
+
+    .selector-bar{display:flex;gap:.5rem;margin-bottom:.7rem}
+    .sel-btn{padding:.35rem .9rem;border-radius:20px;border:1px solid rgba(108,60,224,.25);
+      background:transparent;color:var(--text-dim);font-family:'Chakra Petch',sans-serif;
+      font-size:.72rem;letter-spacing:.1em;cursor:pointer;transition:all .3s}
+    .sel-btn.active{background:var(--accent-dim);border-color:var(--accent);color:var(--text)}
+
+    .hole-container{position:relative;width:200px;height:200px;
+      display:flex;align-items:center;justify-content:center;margin:1.2rem 0}
+    .orbit-ring{position:absolute;border-radius:50%;border:1px solid;animation:orbit-spin linear infinite}
+    .orbit-ring:nth-child(1){width:240px;height:240px;border-color:var(--ring1);animation-duration:20s}
+    .orbit-ring:nth-child(2){width:280px;height:280px;border-color:var(--ring2);animation-duration:35s;animation-direction:reverse}
+    .orbit-ring:nth-child(3){width:320px;height:320px;border-color:var(--ring3);animation-duration:50s}
+    .orbit-ring::after{content:'';position:absolute;top:-3px;left:50%;width:6px;height:6px;
+      border-radius:50%;background:var(--accent-glow);box-shadow:0 0 8px var(--accent-glow);
+      transform:translateX(-50%)}
+    @keyframes orbit-spin{to{transform:rotate(360deg)}}
+
+    .hole-btn{width:170px;height:170px;border-radius:50%;border:none;
+      background:radial-gradient(circle at 35% 35%,#1a1030,#080010 60%,#000 80%);
+      box-shadow:0 0 40px rgba(108,60,224,.3),0 0 80px rgba(108,60,224,.15),inset 0 0 60px rgba(0,0,0,.8);
+      cursor:pointer;position:relative;z-index:2;transition:transform .3s,box-shadow .3s;
+      display:flex;align-items:center;justify-content:center}
+    .hole-btn:active{transform:scale(.95);
+      box-shadow:0 0 60px rgba(108,60,224,.5),0 0 120px rgba(108,60,224,.25),inset 0 0 60px rgba(0,0,0,.9)}
+    .hole-btn .icon{width:48px;height:48px;opacity:.7;transition:opacity .3s}
+    .hole-btn:active .icon{opacity:1}
+    .hole-btn.sucking{animation:suck-pulse 1.5s ease-in-out infinite}
+    @keyframes suck-pulse{
+      0%,100%{box-shadow:0 0 40px rgba(108,60,224,.3),0 0 80px rgba(108,60,224,.15),inset 0 0 60px rgba(0,0,0,.8)}
+      50%{box-shadow:0 0 80px rgba(108,60,224,.6),0 0 150px rgba(108,60,224,.3),inset 0 0 80px rgba(0,0,0,.9);transform:scale(1.04)}}
+
+    .url-display{width:100%;max-width:400px;background:rgba(10,10,18,.8);
+      border:1px solid rgba(108,60,224,.2);border-radius:12px;padding:.8rem 1rem;
+      margin-bottom:.6rem;min-height:44px;display:flex;align-items:center;justify-content:center;
+      backdrop-filter:blur(10px);transition:border-color .3s}
+    .url-display.has-url{border-color:rgba(108,60,224,.5)}
+    .url-text{font-size:.72rem;color:var(--text-dim);text-align:center;word-break:break-all;
+      line-height:1.4;max-height:3.2em;overflow:hidden}
+    .url-text.active{color:var(--accent-glow)}
+
+    .paste-area{width:100%;max-width:400px;display:none;flex-direction:column;gap:.5rem;margin-bottom:.6rem}
+    .paste-area.visible{display:flex}
+    .paste-input{width:100%;background:rgba(10,10,18,.9);border:1px solid rgba(108,60,224,.25);
+      border-radius:10px;padding:.7rem 1rem;color:var(--text);
+      font-family:'Chakra Petch',sans-serif;font-size:.8rem;outline:none}
+    .paste-input:focus{border-color:var(--accent)}
+    .paste-input::placeholder{color:var(--text-dim)}
+
+    .status{font-size:.8rem;color:var(--text-dim);letter-spacing:.08em;text-align:center;
+      min-height:1.4rem;margin-bottom:.6rem;transition:color .3s}
+    .status.processing{color:var(--accent-glow)}.status.success{color:var(--success)}.status.error{color:var(--error)}
+
+    .history-toggle{font-size:.7rem;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;
+      background:none;border:none;cursor:pointer;padding:.4rem;font-family:'Chakra Petch',sans-serif}
+    .history-panel{position:fixed;bottom:0;left:0;right:0;background:var(--surface);
+      border-top:1px solid rgba(108,60,224,.2);border-radius:20px 20px 0 0;
+      padding:1rem 1.5rem 2rem;max-height:50vh;overflow-y:auto;
+      transform:translateY(100%);transition:transform .35s cubic-bezier(.16,1,.3,1);z-index:10}
+    .history-panel.open{transform:translateY(0)}
+    .history-panel h3{font-family:'Orbitron',sans-serif;font-size:.8rem;letter-spacing:.15em;
+      color:var(--text-dim);margin-bottom:.8rem}
+    .history-item{display:flex;justify-content:space-between;align-items:center;
+      padding:.6rem 0;border-bottom:1px solid rgba(108,60,224,.08)}
+    .hi-url{font-size:.7rem;color:var(--text-dim);flex:1;overflow:hidden;text-overflow:ellipsis;
+      white-space:nowrap;margin-right:.5rem}
+    .hi-status{font-size:.65rem;padding:.2rem .5rem;border-radius:8px;white-space:nowrap}
+    .hi-status.done{background:rgba(34,197,94,.15);color:var(--success)}
+    .hi-status.fail{background:rgba(239,68,68,.15);color:var(--error)}
+
+    .settings-btn{position:absolute;top:1rem;right:1rem;background:none;border:none;
+      cursor:pointer;color:var(--text-dim);z-index:5}
+    .settings-panel{position:fixed;inset:0;background:rgba(5,5,8,.95);backdrop-filter:blur(20px);
+      z-index:20;display:none;flex-direction:column;padding:2rem 1.5rem}
+    .settings-panel.open{display:flex}
+    .settings-panel h2{font-family:'Orbitron',sans-serif;font-size:1.1rem;margin-bottom:1.5rem;letter-spacing:.1em}
+    .setting-group{margin-bottom:1.2rem}
+    .setting-group label{display:block;font-size:.75rem;color:var(--text-dim);
+      letter-spacing:.1em;text-transform:uppercase;margin-bottom:.4rem}
+    .setting-group input{width:100%;background:rgba(10,10,18,.9);border:1px solid rgba(108,60,224,.25);
+      border-radius:10px;padding:.7rem 1rem;color:var(--text);
+      font-family:'Chakra Petch',sans-serif;font-size:.85rem;outline:none}
+    .setting-group input:focus{border-color:var(--accent)}
+    .setting-group .hint{font-size:.65rem;color:var(--text-dim);margin-top:.3rem;line-height:1.4}
+    .settings-close{position:absolute;top:1rem;right:1rem;background:none;border:none;
+      cursor:pointer;color:var(--text);font-size:1.5rem}
+    .settings-save{margin-top:auto;padding:.8rem;border-radius:12px;border:none;
+      background:var(--accent);color:white;font-family:'Chakra Petch',sans-serif;
+      font-size:.9rem;font-weight:600;letter-spacing:.05em;cursor:pointer}
+
+    .picker-overlay{position:fixed;inset:0;background:rgba(5,5,8,.92);backdrop-filter:blur(12px);
+      z-index:25;display:none;flex-direction:column;align-items:center;padding:2rem 1rem;overflow-y:auto}
+    .picker-overlay.open{display:flex}
+    .picker-overlay h3{font-family:'Orbitron',sans-serif;font-size:.9rem;margin-bottom:1rem;letter-spacing:.1em}
+    .picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+      gap:.8rem;width:100%;max-width:500px}
+    .picker-item{border-radius:10px;overflow:hidden;border:1px solid rgba(108,60,224,.2);
+      cursor:pointer;transition:border-color .3s}
+    .picker-item:hover{border-color:var(--accent)}
+    .picker-item img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+    .picker-item .pi-label{font-size:.65rem;color:var(--text-dim);padding:.4rem;
+      text-align:center;text-transform:uppercase}
+    .picker-close{margin-top:1rem;padding:.5rem 1.5rem;border-radius:20px;
+      border:1px solid rgba(108,60,224,.3);background:transparent;color:var(--text-dim);
+      font-family:'Chakra Petch',sans-serif;font-size:.75rem;cursor:pointer}
+
+    @media(max-height:700px){
+      .title{font-size:1.3rem}.subtitle{margin-bottom:1rem}
+      .hole-container{width:160px;height:160px;margin:.8rem 0}
+      .hole-btn{width:130px;height:130px}
+      .orbit-ring:nth-child(1){width:190px;height:190px}
+      .orbit-ring:nth-child(2){width:220px;height:220px}
+      .orbit-ring:nth-child(3){width:250px;height:250px}}
+  </style>
+</head>
+<body>
+  <div class="starfield"></div>
+  <div class="app">
+    <button class="settings-btn" onclick="openSettings()" aria-label="Settings">
+      <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+        <path d="M12 15a3 3 0 100-6 3 3 0 000 6z"/>
+        <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 01-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1.08-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1.08 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001.08 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9c.26.604.852.997 1.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1.08z"/>
+      </svg>
+    </button>
+
+    <div class="title">BlackHole</div>
+    <div class="subtitle">Video Downloader</div>
+
+    <div class="selector-bar" id="formatBar">
+      <button class="sel-btn active" data-val="auto" onclick="setFormat('auto')">VIDEO</button>
+      <button class="sel-btn" data-val="audio" onclick="setFormat('audio')">AUDIO</button>
+    </div>
+    <div class="selector-bar" id="qualityBar">
+      <button class="sel-btn" data-val="360" onclick="setQuality('360')">360p</button>
+      <button class="sel-btn" data-val="720" onclick="setQuality('720')">720p</button>
+      <button class="sel-btn active" data-val="1080" onclick="setQuality('1080')">1080p</button>
+      <button class="sel-btn" data-val="max" onclick="setQuality('max')">MAX</button>
+    </div>
+    <div class="selector-bar" id="audioFmtBar" style="display:none">
+      <button class="sel-btn active" data-val="mp3" onclick="setAudioFmt('mp3')">MP3</button>
+      <button class="sel-btn" data-val="ogg" onclick="setAudioFmt('ogg')">OGG</button>
+      <button class="sel-btn" data-val="wav" onclick="setAudioFmt('wav')">WAV</button>
+      <button class="sel-btn" data-val="best" onclick="setAudioFmt('best')">BEST</button>
+    </div>
+
+    <div class="hole-container">
+      <div class="orbit-ring"></div>
+      <div class="orbit-ring"></div>
+      <div class="orbit-ring"></div>
+      <button class="hole-btn" id="holeBtn" onclick="handleHoleClick()">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="rgba(139,92,246,0.6)" stroke-width="1.5">
+          <path d="M12 3v12m0 0l-4-4m4 4l4-4M5 19h14"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="url-display" id="urlDisplay">
+      <span class="url-text" id="urlText">Tap the hole to absorb a URL</span>
+    </div>
+    <div class="paste-area" id="pasteArea">
+      <input type="text" class="paste-input" id="pasteInput"
+             placeholder="Paste video URL here..."
+             onkeydown="if(event.key==='Enter') processUrl(this.value)">
+    </div>
+    <div class="status" id="status"></div>
+    <button class="history-toggle" onclick="toggleHistory()">History ▲</button>
+  </div>
+
+  <div class="history-panel" id="historyPanel">
+    <h3>Download History</h3>
+    <div id="historyList"></div>
+  </div>
+
+  <div class="picker-overlay" id="pickerOverlay">
+    <h3>Pick an item</h3>
+    <div class="picker-grid" id="pickerGrid"></div>
+    <button class="picker-close" onclick="closePicker()">Close</button>
+  </div>
+
+  <div class="settings-panel" id="settingsPanel">
+    <button class="settings-close" onclick="closeSettings()">×</button>
+    <h2>Settings</h2>
+    <div class="setting-group">
+      <label>Cobalt API URL</label>
+      <input type="url" id="apiUrlInput" placeholder="https://your-instance.up.railway.app">
+      <div class="hint">Deploy cobalt on Railway (free tier) — see README for one-click deploy link.</div>
+    </div>
+    <div class="setting-group">
+      <label>Authorization (optional)</label>
+      <input type="text" id="apiKeyInput" placeholder="Api-Key your-key-here">
+      <div class="hint">Full header value, e.g. "Api-Key abc-123" or "Bearer token..."</div>
+    </div>
+    <button class="settings-save" onclick="saveSettings()">Save Settings</button>
+  </div>
+
+  <script>
+    let downloadMode='auto',videoQuality='1080',audioFormat='mp3';
+    let history=JSON.parse(localStorage.getItem('bh_history')||'[]');
+    let apiUrl=localStorage.getItem('bh_api_url')||'';
+    let apiKey=localStorage.getItem('bh_api_key')||'';
+    const $=id=>document.getElementById(id);
+
+    function activate(barId,val){document.querySelectorAll(`#${barId} .sel-btn`).forEach(b=>b.classList.toggle('active',b.dataset.val===val))}
+    function setFormat(f){downloadMode=f;activate('formatBar',f);
+      $('qualityBar').style.display=f==='audio'?'none':'flex';
+      $('audioFmtBar').style.display=f==='audio'?'flex':'none'}
+    function setQuality(q){videoQuality=q;activate('qualityBar',q)}
+    function setAudioFmt(f){audioFormat=f;activate('audioFmtBar',f)}
+
+    function isVideoUrl(t){return t&&/^https?:\/\/.+/i.test(t.trim())}
+
+    async function handleHoleClick(){
+      if(!apiUrl){setStatus('Set your Cobalt API URL in Settings','error');openSettings();return}
+      try{
+        const t=await navigator.clipboard.readText();
+        if(isVideoUrl(t)){processUrl(t.trim());return}
+        setStatus('No URL in clipboard — paste below','error');showPaste()
+      }catch{setStatus('Paste the URL below','');showPaste()}}
+
+    function showPaste(){$('pasteArea').classList.add('visible');$('pasteInput').focus()}
+
+    async function processUrl(url){
+      if(!isVideoUrl(url)){setStatus('Not a valid URL','error');return}
+      if(!apiUrl){setStatus('Set API URL in Settings','error');openSettings();return}
+      $('pasteArea').classList.remove('visible');$('pasteInput').value='';
+      $('urlText').textContent=url;$('urlText').classList.add('active');
+      $('urlDisplay').classList.add('has-url');$('holeBtn').classList.add('sucking');
+      setStatus('Absorbing...','processing');
+      try{
+        const body={url,downloadMode,videoQuality,audioFormat,filenameStyle:'pretty'};
+        const headers={'Accept':'application/json','Content-Type':'application/json'};
+        if(apiKey) headers['Authorization']=apiKey;
+        const resp=await fetch(apiUrl.replace(/\/+$/,''),{method:'POST',headers,body:JSON.stringify(body)});
+        if(!resp.ok){const e=await resp.json().catch(()=>({}));throw new Error(e?.error?.code||`HTTP ${resp.status}`)}
+        const data=await resp.json();
+        switch(data.status){
+          case 'tunnel':case 'redirect':
+            setStatus('Ready! Opening download...','success');
+            triggerDownload(data.url,data.filename||'download');addHistory(url,'done');break;
+          case 'picker':
+            setStatus('Multiple items — pick one','success');
+            showPicker(data.picker,data.audio);addHistory(url,'done');break;
+          case 'error':throw new Error(data.error?.code||'Unknown error');
+          default:throw new Error('Unexpected: '+data.status)}
+      }catch(err){
+        let m=err.message||'Error';
+        if(m.includes('content.video.unavailable'))m='Video unavailable or private';
+        if(m.includes('content.video.live'))m='Cannot download live streams';
+        if(m.includes('fetch'))m='Cannot reach API — check Settings';
+        if(m.includes('rate_exceeded'))m='Rate limited — wait a moment';
+        setStatus(m,'error');addHistory(url,'fail');
+      }finally{$('holeBtn').classList.remove('sucking')}}
+
+    function triggerDownload(url,fn){
+      const w=window.open(url,'_blank');
+      if(!w){const a=document.createElement('a');a.href=url;a.download=fn;a.target='_blank';
+        document.body.appendChild(a);a.click();document.body.removeChild(a)}}
+
+    function showPicker(items,audioUrl){
+      const g=$('pickerGrid');
+      g.innerHTML=items.map((it,i)=>`<div class="picker-item" onclick="triggerDownload('${it.url}','item_${i}')">
+        ${it.thumb?`<img src="${it.thumb}" alt="Item ${i+1}" loading="lazy">`
+        :`<div style="width:100%;aspect-ratio:1;background:var(--surface);display:flex;align-items:center;justify-content:center;color:var(--text-dim);font-size:.7rem">${it.type||'media'}</div>`}
+        <div class="pi-label">${it.type||'media'} ${i+1}</div></div>`).join('');
+      if(audioUrl)g.innerHTML+=`<div class="picker-item" onclick="triggerDownload('${audioUrl}','audio')">
+        <div style="width:100%;aspect-ratio:1;background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:1.5rem">🎵</div>
+        <div class="pi-label">Audio</div></div>`;
+      $('pickerOverlay').classList.add('open')}
+    function closePicker(){$('pickerOverlay').classList.remove('open')}
+
+    function setStatus(m,t){$('status').textContent=m;$('status').className='status'+(t?' '+t:'')}
+
+    function addHistory(u,s){history.unshift({url:u,status:s,time:Date.now()});
+      if(history.length>50)history=history.slice(0,50);
+      localStorage.setItem('bh_history',JSON.stringify(history));renderHistory()}
+    function renderHistory(){$('historyList').innerHTML=history.map(h=>`<div class="history-item">
+      <span class="hi-url">${h.url}</span>
+      <span class="hi-status ${h.status}">${h.status==='done'?'✓':'✗'}</span></div>`).join('')}
+    function toggleHistory(){$('historyPanel').classList.toggle('open')}
+
+    function openSettings(){$('apiUrlInput').value=apiUrl;$('apiKeyInput').value=apiKey;$('settingsPanel').classList.add('open')}
+    function closeSettings(){$('settingsPanel').classList.remove('open')}
+    function saveSettings(){apiUrl=$('apiUrlInput').value.trim();apiKey=$('apiKeyInput').value.trim();
+      localStorage.setItem('bh_api_url',apiUrl);localStorage.setItem('bh_api_key',apiKey);
+      closeSettings();setStatus('Settings saved ✓','success');setTimeout(()=>setStatus('',''),2000)}
+
+    renderHistory();
+    if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+  </script>
+</body>
+</html>
