@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blackhole-v3';
+const CACHE_NAME = 'blackhole-v4';
 const ASSETS = [
   '/BlackHole/',
   '/BlackHole/index.html',

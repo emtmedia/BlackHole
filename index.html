@@ -259,10 +259,18 @@
 
     function isVideoUrl(t){return t&&/^https?:\/\/.+/i.test(t.trim())}
 
+    let cachedClip='';
+    async function prefetchClipboard(){
+      try{const t=await navigator.clipboard.readText();cachedClip=t||''}catch{cachedClip=''}}
+    document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')prefetchClipboard()});
+    prefetchClipboard();
+
     async function handleHoleClick(){
       if(!apiUrl){setStatus('Set your Cobalt API URL in Settings','error');openSettings();return}
+      if(isVideoUrl(cachedClip)){processUrl(cachedClip.trim());return}
       try{
         const t=await navigator.clipboard.readText();
+        cachedClip=t||'';
         if(isVideoUrl(t)){processUrl(t.trim());return}
         setStatus('No URL in clipboard — paste below','error');showPaste()
       }catch{setStatus('Paste the URL below','');showPaste()}}
